@@ -9,18 +9,12 @@ import models
 
 
 def start_page():
-    """
-    :return: Main Page.
-    """
     if not session.get("Email") and not session.get("Password") and not session.get("ID"):
         return redirect("user/sign_in")
     return render_template('index.html')
 
 
 def about():
-    """
-    :return: About Page.
-    """
     return render_template('about.html')
 
 
@@ -28,11 +22,7 @@ def about():
 # /////////////////////////////////////////////////////////////////////////////////////
 # ///////////////////////////////Cart Methods//////////////////////////////////////////
 
-def cart():  # db alchemy done
-    """
-    Shows all dishes in cart.
-    :return: data of all dishes in cart.
-    """
+def cart():
     user_id = session['ID']
     order_status = 0
     order = database.db_session.query(models.Orders).filter(models.Orders.User == user_id,
@@ -47,7 +37,7 @@ def cart():  # db alchemy done
             filter(ordered_dishes.order_id == order.ID).all()
 
     except Exception as e:
-        print("Помилка:", e)
+        print("Error:", e)
 
     if request.method == 'POST':
         del_order = request.form.to_dict()
@@ -64,17 +54,14 @@ def cart():  # db alchemy done
                 database.db_session.commit()
 
             except Exception as e:
-                print("Помилка:", e)
+                print("Error:", e)
         return redirect('/cart')
 
     return render_template('cart.html',
                            result=query)
 
 
-def cart_order():  # db alchemy done
-    """
-    :return: order_data for paying.
-    """
+def cart_order():
     if request.method == 'POST':
         try:
             ord_id = database.db_session.query(models.Orders).filter(models.Orders.Status == 0,
@@ -103,7 +90,7 @@ def cart_order():  # db alchemy done
         return render_template('cart_order.html')
 
 
-def cart_add():  # db alchemy done
+def cart_add():
     if session.get('ID') is None:
         return redirect('/user/sign_in')
     if request.method == 'POST':
@@ -114,7 +101,7 @@ def cart_add():  # db alchemy done
                                                               models.Orders.Status == 0).first()
 
         current_datetime = datetime.datetime.now()
-        if res is not None:  # If Orders is not empty
+        if res:
             if res.User == int(session['ID']) and res.Status == 0:
                 add_to_cart = models.OrderedDishes(dish=ordered_dishes_data['dish'],
                                                    count=ordered_dishes_data['count'],
@@ -123,7 +110,6 @@ def cart_add():  # db alchemy done
                 database.db_session.commit()
                 return redirect('/menu')
             elif res.User != int(session['ID']):
-                #  get address
                 address_id = database.db_session.query(models.Address). \
                              filter(models.Address.User == int(session.get('ID'))).first()
                 try:
@@ -143,11 +129,10 @@ def cart_add():  # db alchemy done
                 except Exception as e:
                     print("Помилка:", e)
         else:  # if Orders is empty
-            # address id
             address_id = database.db_session.query(models.Address). \
                          filter(models.Address.User == int(session.get('ID'))).first()
 
-            try:  # so creating data in Orders
+            try:
                 create_order = models.Orders(
                     User=int(session.get('ID')),
                     Address=int(address_id.ID),
@@ -156,7 +141,7 @@ def cart_add():  # db alchemy done
                 )
                 database.db_session.add(create_order)
                 database.db_session.commit()
-                # taking data  from Orders
+                
                 res = database.db_session.query(models.Orders).filter(models.Orders.User == int(session.get('ID')),
                                                                       models.Orders.Status == 0).first()
 
@@ -175,12 +160,7 @@ def cart_add():  # db alchemy done
 # ///////////////////////////////User Methods//////////////////////////////////////////
 
 
-def user():  # db alchemy done
-    """
-    Different actions with user.
-    methods=['GET', 'POST', 'PUT', 'DELETE']
-    :return: user_data.
-    """
+def user():
     database.init_db()
     if session.get('ID') is None:
         return redirect('/user/sign_in')
@@ -190,7 +170,7 @@ def user():  # db alchemy done
         return render_template('user.html', result=user_info)
 
 
-def user_update():  # db alchemy done
+def user_update():
     database.init_db()
     if session.get('ID') is None:
         return redirect('/user/sign_in')
@@ -212,7 +192,7 @@ def user_update():  # db alchemy done
     return render_template('user_update.html')
 
 
-def user_register():  # db alchemy done
+def user_register():
     database.init_db()
     if request.method == 'POST':
         data = request.form.to_dict()
@@ -231,11 +211,7 @@ def user_register():  # db alchemy done
     return render_template('register.html')
 
 
-def user_sign_in():  # db alchemy done
-    """
-    methods = [POST]
-    :return:
-    """
+def user_sign_in():
     database.init_db()
     if request.method == 'POST':
         data = request.form.to_dict()
@@ -256,11 +232,7 @@ def user_sign_in():  # db alchemy done
     return render_template('sign_in.html')
 
 
-def user_logout():  # db alchemy done
-    """
-    methods=['POST', 'GET']
-    :return:
-    """
+def user_logout(): 
     if session.get('ID') is None:
         return redirect('/user/sign_in')
     database.db_session.close()
@@ -271,11 +243,7 @@ def user_logout():  # db alchemy done
     return redirect("/")
 
 
-def user_restore():  # db alchemy done
-    """
-    methods=['POST']
-    :return:
-    """
+def user_restore():
     if request.method == 'POST':
         data = request.form.to_dict()
         try:
@@ -289,11 +257,7 @@ def user_restore():  # db alchemy done
     return render_template('password_restore.html')
 
 
-def user_orders_history():  # db alchemy done
-    """
-    methods=['GET']
-    :return:
-    """
+def user_orders_history():
     if session.get('ID') is None:
         return redirect('/user/sign_in')
     if request.method == 'GET':
@@ -302,12 +266,7 @@ def user_orders_history():  # db alchemy done
                                result=orders)
 
 
-def user_order(order_id: int):  # db alchemy done
-    """
-    Shows user order
-    methods=['GET']
-    :return:
-    """
+def user_order(order_id: int):
     print(order_id)
     if session.get('ID') is None:
         return redirect('/user/sign_in')
@@ -327,11 +286,7 @@ def user_order(order_id: int):  # db alchemy done
             print("Помилка:", e)
 
 
-def user_address_list():  # db alchemy done
-    """
-    methods=['GET', 'POST']
-    :return:
-    """
+def user_address_list():
     if session.get('ID') is None:
         return redirect('/user/sign_in')
     if request.method == 'GET':
@@ -341,7 +296,7 @@ def user_address_list():  # db alchemy done
         return render_template('user_addresses.html', result=addresses)
 
 
-def user_address_add():  # db alchemy done
+def user_address_add():
     if session.get('ID') is None:
         return redirect('/user/sign_in')
     if request.method == 'POST':
@@ -362,11 +317,7 @@ def user_address_add():  # db alchemy done
     return render_template('address_add.html', result=int(session.get('ID')))
 
 
-def user_address(address_id: int):  # db alchemy done
-    """
-    methods=['GET', 'POST']
-    :return:
-    """
+def user_address(address_id: int):
     print(address_id)
     if session.get('ID') is None:
         return redirect('/user/sign_in')
@@ -393,27 +344,19 @@ def user_address(address_id: int):  # db alchemy done
 # ///////////////////////////////The END///////////////////////////////////////////////
 # /////////////////////////////////////////////////////////////////////////////////////
 # ///////////////////////////////Menu ,Category , Dish Methods/////////////////////////
-def menu():  # db alchemy done
+def menu():
     if request.method == 'GET':
         return render_template('menu.html')
 
 
-def categories():  # db alchemy done
-    """
-    methods=['GET']
-    :return:
-    """
+def categories():
     if request.method == "GET":
         category_data = database.db_session.query(models.Category).all()
         return render_template('categories.html',
                                result=category_data)
 
 
-def category_dishes(cat_id):  # db alchemy done
-    """
-    methods=['GET']
-    :return:
-    """
+def category_dishes(cat_id):
     if request.method == "GET":
         dish_category = database.db_session.query(models.Dishes).filter(models.Dishes.Category == int(cat_id)).all()
         return render_template('category_dishes.html',
@@ -422,10 +365,6 @@ def category_dishes(cat_id):  # db alchemy done
 
 
 def category_sort(cat_id, order_by, asc_desc_val):
-    """
-    methods=['GET']
-    :return:
-    """
     par = request.args
     print(par)
     if request.method == "GET":
@@ -438,21 +377,13 @@ def category_sort(cat_id, order_by, asc_desc_val):
             print("Помилка:", e)
 
 
-def dishes():  # db alchemy done
-    """
-    methods=['GET']
-    :return:
-    """
+def dishes():
     dish_data = database.db_session.query(models.Dishes).all()
     return render_template('category_dishes.html', result=dish_data
                            )
 
 
-def dish(cat_id: int, dish_id: int):  # db alchemy done
-    """
-    methods=['GET']
-    :return:
-    """
+def dish(cat_id: int, dish_id: int): 
     admin_dish_edit(dish_id)
     if request.method == 'GET':
         dish_data = database.db_session.query(models.Dishes).filter(models.Dishes.ID == int(dish_id)).first()
@@ -460,11 +391,7 @@ def dish(cat_id: int, dish_id: int):  # db alchemy done
                                result=dish_data)
 
 
-def search():  # db alchemy done
-    """
-    methods=['GET', 'POST']
-    :return:
-    """
+def search(): 
     if request.method == 'POST':
         data = request.form.to_dict()
         dish_data_search = database.db_session.query(models.Dishes).filter(models.Dishes.Dish_name == data['search']).first()
@@ -475,11 +402,6 @@ def search():  # db alchemy done
 
 
 def dish_sort(order_by_var, asc_desc_val):
-    """
-    methods=['GET', 'POST']
-    :return:
-    """
-
     if request.method == 'GET':
         print('order_by_var: ', order_by_var)
         if asc_desc_val == asc:
@@ -495,11 +417,7 @@ def dish_sort(order_by_var, asc_desc_val):
 # ///////////////////////////////The END///////////////////////////////////////////////
 # /////////////////////////////////////////////////////////////////////////////////////
 # ///////////////////////////////Admin Methods/////////////////////////////////////////
-def admin_dishes():  # db alchemy done
-    """
-    methods=['GET']
-    :return:
-    """
+def admin_dishes():
     if session.get('ID') is None:
         return redirect('/user/sign_in')
     if request.method == 'GET':
@@ -508,11 +426,7 @@ def admin_dishes():  # db alchemy done
             return render_template('category_dishes.html', result=dish_data)
 
 
-def admin_dish():  # db alchemy done
-    """
-    methods=['GET', 'POST']
-    :return:
-    """
+def admin_dish():
     if session.get('ID') is None:
         return redirect('/user/sign_in')
     if request.method == 'POST':
@@ -536,7 +450,7 @@ def admin_dish():  # db alchemy done
     return render_template('add_dish.html', cat_data=category_data)
 
 
-def admin_dish_edit(dish_id):  # db alchemy done
+def admin_dish_edit(dish_id):
     print(request.method)
     if session.get('ID') is None:
         return redirect('/user/sign_in')
@@ -564,7 +478,7 @@ def admin_dish_edit(dish_id):  # db alchemy done
     return render_template('dish_edit.html', result=dish_edit_data, cat_data=category_data)
 
 
-def delete_dish(dish_id):  # db alchemy done
+def delete_dish(dish_id):
     if request.method == 'POST':
         data = request.form.to_dict()
         try:
@@ -576,11 +490,7 @@ def delete_dish(dish_id):  # db alchemy done
     return redirect('/admin/dishes')
 
 
-def admin_orders():  # db alchemy done
-    """
-    methods=['GET']
-    :return:
-    """
+def admin_orders():
     if session.get('ID') is None:
         return redirect('/user/sign_in')
     if request.method == 'GET':
@@ -592,11 +502,7 @@ def admin_orders():  # db alchemy done
                                )
 
 
-def admin_order(order_id: int):  # db alchemy done
-    """
-    methods=['GET', 'POST']
-    :return:
-    """
+def admin_order(order_id: int): 
     print(request.method)
     print(order_id)
     if session.get('ID') is None:
@@ -625,30 +531,18 @@ def admin_order(order_id: int):  # db alchemy done
 
 
 def admin_sort_order_status():
-    """
-    methods=['GET']
-    :return:
-    """
     if session.get('ID') is None:
         return redirect('/user/sign_in')
     return
 
 
 def admin_set_order_status():
-    """
-    methods=['POST']
-    :return:
-    """
     if session.get('ID') is None:
         return redirect('/user/sign_in')
     return
 
 
-def admin_show_categories():  # db alchemy done
-    """
-    methods=['GET']
-    :return:
-    """
+def admin_show_categories(): 
     if session.get('ID') is None:
         return redirect('/user/sign_in')
     if request.method == "GET":
@@ -657,11 +551,7 @@ def admin_show_categories():  # db alchemy done
                                result=category_data)
 
 
-def admin_category_edit():  # db alchemy done
-    """
-    methods=['POST', 'DELETE']
-    :return:
-    """
+def admin_category_edit(): 
     if session.get('ID') is None:
         return redirect('/user/sign_in')
     if request.method == 'POST':
@@ -675,11 +565,7 @@ def admin_category_edit():  # db alchemy done
     return render_template('admin_categories.html')
 
 
-def admin_search():  # working with regular user search in template
-    """
-    methods=['GET']
-    :return:
-    """
+def admin_search():  
     if session.get('ID') is None:
         return redirect('/user/sign_in')
 
